@@ -1,127 +1,139 @@
 class StartScreen {
-    var archiveList: ArrayList<ArrayList<Note>> = ArrayList()
+    var archiveMap = mutableMapOf<String, ArrayList<Note>>()
 
-    fun startScreen(){
-        printStartMenu()
-        when(getDigitFromInput()){
-            0-> createArchive()
-            1-> selectArchive()
-            2-> return
-            else -> println("Такого пункта меню нет.")
+    fun startScreen() {
+        while (true) {
+            printStartMenu()
+            when (getDigitFromInput()) {
+                0 -> createArchive()
+                1 -> selectArchive()
+                2 -> return
+                else -> println("Такого пункта меню нет.")
+            }
         }
-        startScreen()
     }
 
-    fun printStartMenu(){
+    fun printStartMenu() {
         println("-------------------------------------")
         println("0. Создать архив")
         println("1. Это мой уже созданный архив")
         println("2. Выход")
     }
 
-    fun createArchive(){
-        archiveList.add(ArrayList<Note>())
-        println("Архив c №${archiveList.size} успешно создан!")
+    fun createArchive() {
+        println("Введите название архива.")
+        var archiveName = getTextFromInput()
+        while (archiveMap.keys.contains(archiveName)) {
+            println("Данное название уже занято, придумайте другое название архива.")
+            archiveName = getTextFromInput()
+        }
+
+        archiveMap.put(archiveName, ArrayList())
+        println("Архив \"${archiveName}\" успешно создан!")
     }
 
-    fun selectArchive(){
-        printArchiveList()
-        if(archiveList.isEmpty()){
-            startScreen()
-            return
-        }
-        println("Введите номер архива.")
-        var input = getDigitFromInput()-1
-        if(input in archiveList.indices)
-            openArchiveScreen(input)
-        else {
-            println("Такого номера архива нет")
-            selectArchive()
+    fun selectArchive() {
+        while (true) {
+            printArchiveList()
+            if (archiveMap.isEmpty()) {
+                return
+            }
+            println("Введите номер архива.")
+            val input = getDigitFromInput() - 1
+            if (input in archiveMap.toList().indices) {
+                openArchiveScreen(archiveMap.toList()[input].first)
+                return
+            } else {
+                println("Такого номера архива нет")
+            }
         }
     }
 
-    fun printArchiveList(){
+    fun printArchiveList() {
         println("-------------------------------------")
-        if(archiveList.isEmpty())
+        if (archiveMap.isEmpty()) {
             println("Список архивов пуст. Добавьте их для начала работы")
-        else{
+        } else {
             println("Список архивов:")
-            archiveList.forEachIndexed { index, notes ->  println("${index+1}. Заметки: "+if(notes.isEmpty())"отсутсвуют" else notes.map { it.name }.joinToString(","))}
+            archiveMap.toList()
+                .forEachIndexed { index, pair -> println("${index + 1}. ${pair.first}") }
         }
     }
 
-    fun openArchiveScreen(archiveIndex: Int){
-        printNoteListMenu()
-        when(getDigitFromInput()){
-            0-> createNote(archiveIndex)
-            1-> selectNote(archiveIndex)
-            2-> return
-            else -> println("Такого пункта меню нет.")
+    fun openArchiveScreen(archiveName: String) {
+        while (true) {
+            printNoteListMenu()
+            when (getDigitFromInput()) {
+                0 -> createNote(archiveName)
+                1 -> selectNote(archiveName)
+                2 -> return
+                else -> println("Такого пункта меню нет.")
+            }
         }
-        openArchiveScreen(archiveIndex)
     }
 
-    fun printNoteListMenu(){
+    fun printNoteListMenu() {
         println("-------------------------------------")
         println("0. Создать заметку")
         println("1. Выбрать заметку")
         println("2. Выход")
     }
 
-    fun createNote(archiveIndex: Int){
+    fun createNote(archiveName: String) {
         println("Введите название заметки")
         val nameNote = getTextFromInput()
         println("Введите текст заметки")
         val messageNote = getTextFromInput()
-
-        archiveList[archiveIndex].add(Note(nameNote, messageNote))
+        archiveMap.getValue(archiveName).add(Note(nameNote, messageNote))
     }
 
-    fun getDigitFromInput():Int{
+    fun getDigitFromInput(): Int {
         var inputDigit = readLine()?.toIntOrNull()
-        while (inputDigit == null){
-            inputDigit = readLine()?.toIntOrNull()
+        while (inputDigit == null) {
             println("Ввод должен содержать цифру")
+            inputDigit = readLine()?.toIntOrNull()
+
         }
         return inputDigit
     }
 
-    fun getTextFromInput():String{
+    fun getTextFromInput(): String {
         var inputText = readLine()
-        while (inputText.isNullOrBlank()){
-            inputText = readLine()
+        while (inputText.isNullOrBlank()) {
             println("Ввод не должен быть пустым")
+            inputText = readLine()
         }
         return inputText
     }
 
-    fun selectNote(archiveIndex: Int){
-        printNoteList(archiveIndex)
-        if(archiveList[archiveIndex].isEmpty())
+    fun selectNote(archiveName: String) {
+        printNoteList(archiveName)
+        if (archiveMap.getValue(archiveName).isEmpty())
             return
 
         println("Выберите номер заметки.")
-        var input = getDigitFromInput()-1
+        val input = getDigitFromInput() - 1
 
-        if(input in archiveList[archiveIndex].indices)
-            openNote(archiveList[archiveIndex][input])
-        else {
+        if (input in archiveMap.toList().indices) {
+            openNote(archiveMap.getValue(archiveName)[input])
+        } else {
             println("Такого номера заметки нет.")
-            selectNote(archiveIndex)
+            selectNote(archiveName)
         }
     }
 
-    fun printNoteList(archiveIndex: Int){
+    fun printNoteList(archiveName: String) {
         println("-------------------------------------")
-        if(archiveList[archiveIndex].isEmpty())
+        if (archiveMap.getValue(archiveName).isEmpty()) {
             println("Список заметок пуст!")
-        else{
+        } else {
             println("Список заметок: ")
-            archiveList[archiveIndex].map { it.name }.forEachIndexed { index, s ->  println("${index+1}. ${s}") }
+            archiveMap.getValue(archiveName).toList()
+                .forEachIndexed { index, s -> println("${index + 1}. ${s.name}") }
         }
     }
 
-    fun openNote(note: Note){
+    fun openNote(note: Note) {
         println("-------------------------------------")
         println("Заметка \"${note.name}\"\n${note.message}")
         return
