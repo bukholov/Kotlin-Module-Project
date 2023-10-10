@@ -1,0 +1,1 @@
+data class Note(var name: String, var message: String)
